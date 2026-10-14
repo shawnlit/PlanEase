@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { ThemeProvider } from '@/components/theme-provider';
 import { ToastProvider } from '@/components/ui/toast';
 import './globals.css';
 
@@ -14,8 +15,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'PlanEase — Student Task & Deadline Manager',
-  description: 'Clean, minimalist, privacy-friendly task manager for students with SQLite and calendar integration.',
+  title: 'PlanEase — Minimal Student Task & Deadline Manager',
+  description: 'A clean, privacy-friendly task and deadline manager for students with embedded SQLite and AI extraction.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -29,8 +36,15 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50">
-        <ToastProvider>{children}</ToastProvider>
+      <body className="min-h-full flex flex-col font-sans bg-background text-foreground antialiased selection:bg-zinc-200 dark:selection:bg-zinc-800">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ToastProvider>{children}</ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

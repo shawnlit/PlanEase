@@ -49,8 +49,8 @@ export function DeleteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogClose onClick={() => onOpenChange(false)} />
       <DialogHeader>
-        <div className="flex items-center gap-2 text-red-600 dark:text-red-400 mb-1">
-          <AlertTriangle className="h-5 w-5" />
+        <div className="flex items-center gap-2 text-red-700 dark:text-red-400 mb-1">
+          <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
           <DialogTitle>Delete Task</DialogTitle>
         </div>
         <DialogDescription>
@@ -58,12 +58,15 @@ export function DeleteDialog({
           <span className="font-semibold text-zinc-900 dark:text-zinc-100">
             &ldquo;{task?.title}&rdquo;
           </span>
-          ? This action will remove it permanently from the database.
+          ? This will permanently remove it from your schedule and database.
         </DialogDescription>
       </DialogHeader>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-xs text-red-600 dark:bg-red-950/30 dark:text-red-400 mb-4">
+        <div
+          role="alert"
+          className="rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200 mb-3"
+        >
           {error}
         </div>
       )}
@@ -84,7 +87,7 @@ export function DeleteDialog({
         >
           {isDeleting ? (
             <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" aria-hidden="true" />
               Deleting...
             </>
           ) : (

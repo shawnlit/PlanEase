@@ -24,6 +24,7 @@ import {
   createTask,
   deleteTask,
 } from '../src/lib/tasks';
+import { formatDate, formatTime, isDeadlineOverdue } from '../src/lib/utils';
 
 let passedTests = 0;
 let failedTests = 0;
@@ -280,6 +281,33 @@ async function main() {
 
     const deleted = deleteTask(task.id);
     assert.strictEqual(deleted, true);
+  });
+
+  // Test 15: Deadlines with specific time feature and formatting
+  await runTest('15. Deadlines with specific time feature, formatting, and overdue checks', () => {
+    // formatTime checks
+    assert.strictEqual(formatTime('14:30'), '2:30 PM');
+    assert.strictEqual(formatTime('09:05'), '9:05 AM');
+    assert.strictEqual(formatTime('00:00'), '12:00 AM');
+    assert.strictEqual(formatTime('12:00'), '12:00 PM');
+
+    // formatDate with and without time
+    const formattedDateOnly = formatDate('2026-10-15');
+    assert.ok(formattedDateOnly.includes('Oct 15, 2026'));
+
+    const formattedWithTime = formatDate('2026-10-15T14:30');
+    assert.ok(formattedWithTime.includes('Oct 15, 2026 at 2:30 PM'));
+
+    // SQLite persistence with time
+    const timedTask = createTask({
+      title: 'Database Project Presentation',
+      type: 'assignment',
+      deadline: '2026-10-15T15:30',
+    });
+    assert.strictEqual(timedTask.deadline, '2026-10-15T15:30');
+
+    // Clean up
+    deleteTask(timedTask.id);
   });
 
   console.log(`\n📊 Test Summary: ${passedTests} passed, ${failedTests} failed.`);

@@ -25,27 +25,28 @@ export function TaskCalendar({
     return tasks
       .filter((task) => task.deadline !== null && task.deadline !== undefined)
       .map((task) => {
-        let backgroundColor = '#475569';
-        let borderColor = '#334155';
+        let backgroundColor = '#334155'; // Slate 700
+        let borderColor = '#1e293b';
 
         if (task.type === 'exam') {
-          backgroundColor = '#e11d48'; // Rose 600
-          borderColor = '#be123c';
+          backgroundColor = '#be123c'; // Rose 700
+          borderColor = '#9f1239';
         } else if (task.type === 'assignment') {
-          backgroundColor = '#4f46e5'; // Indigo 600
-          borderColor = '#4338ca';
+          backgroundColor = '#3730a3'; // Indigo 800
+          borderColor = '#312e81';
         }
 
         const isCompleted = task.status === 'completed';
         const title = isCompleted ? `✓ ${task.title}` : task.title;
+        const hasTime = task.deadline!.includes('T');
 
         return {
           id: String(task.id),
           title,
           start: task.deadline!,
-          allDay: true,
-          backgroundColor: isCompleted ? '#71717a' : backgroundColor,
-          borderColor: isCompleted ? '#52525b' : borderColor,
+          allDay: !hasTime,
+          backgroundColor: isCompleted ? '#52525b' : backgroundColor,
+          borderColor: isCompleted ? '#3f3f46' : borderColor,
           textColor: '#ffffff',
           extendedProps: {
             task,
@@ -69,39 +70,39 @@ export function TaskCalendar({
   };
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+    <Card className="overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xs">
+      <CardHeader className="pb-3 border-b border-zinc-100 dark:border-zinc-800">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <CardTitle className="text-base flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4 text-zinc-500" />
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-zinc-500" aria-hidden="true" />
               Academic Calendar
             </CardTitle>
-            <CardDescription>
-              Deadlines for exams, assignments, and tasks. Click any date to add a deadline.
+            <CardDescription className="text-xs">
+              Deadlines and scheduled times for exams, assignments, and tasks. Click any day or time slot to schedule a task.
             </CardDescription>
           </div>
 
-          {/* Color legend */}
-          <div className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400">
+          {/* Color legend with clear text */}
+          <div className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400 shrink-0" aria-label="Calendar Event Types">
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-rose-600" />
-              <span>Exam</span>
+              <span className="h-2 w-2 rounded-full bg-rose-700" aria-hidden="true" />
+              <span className="font-medium">Exam</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-indigo-600" />
-              <span>Assignment</span>
+              <span className="h-2 w-2 rounded-full bg-indigo-700" aria-hidden="true" />
+              <span className="font-medium">Assignment</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-slate-600" />
-              <span>General</span>
+              <span className="h-2 w-2 rounded-full bg-slate-700" aria-hidden="true" />
+              <span className="font-medium">General</span>
             </div>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-6">
-        <div className="fullcalendar-wrapper">
+      <CardContent className="p-3 sm:p-5">
+        <div className="fullcalendar-wrapper overflow-x-auto">
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
@@ -113,16 +114,27 @@ export function TaskCalendar({
             events={events}
             eventClick={handleEventClick}
             dateClick={handleDateClick}
+            eventTimeFormat={{
+              hour: 'numeric',
+              minute: '2-digit',
+              meridiem: 'short',
+            }}
+            slotLabelFormat={{
+              hour: 'numeric',
+              minute: '2-digit',
+              meridiem: 'short',
+            }}
+            slotMinTime="06:00:00"
             height="auto"
-            aspectRatio={1.5}
+            aspectRatio={1.4}
             dayMaxEvents={3}
             editable={false}
             selectable={true}
           />
         </div>
 
-        <div className="mt-4 flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
-          <Info className="h-3.5 w-3.5" />
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+          <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>Events represent deadlines. Tasks without deadlines are listed on the checklist only.</span>
         </div>
       </CardContent>

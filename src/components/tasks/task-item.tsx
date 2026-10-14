@@ -32,100 +32,109 @@ export function TaskItemRow({
       case 'assignment':
         return 'Assignment';
       default:
-        return 'Task';
+        return 'General';
     }
   };
 
   return (
-    <div
+    <article
+      aria-label={`Task: ${task.title}, Type: ${getTypeLabel(task.type)}, Status: ${task.status}`}
       className={cn(
-        'group flex items-center justify-between gap-3 rounded-lg border p-3.5 transition-all duration-150',
+        'group flex items-center justify-between gap-3 rounded-lg border p-3 sm:p-3.5 transition-colors',
         isCompleted
-          ? 'border-zinc-200/60 bg-zinc-50/50 opacity-60 dark:border-zinc-800/60 dark:bg-zinc-900/30'
+          ? 'border-zinc-200 bg-zinc-50/60 dark:border-zinc-800 dark:bg-zinc-900/40 text-zinc-600 dark:text-zinc-400'
           : isOverdue
-          ? 'border-red-200/80 bg-red-50/20 dark:border-red-900/40 dark:bg-red-950/10 hover:border-red-300'
-          : 'border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-xs dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700'
+          ? 'border-red-300 bg-red-50/25 dark:border-red-900/60 dark:bg-red-950/15'
+          : 'border-zinc-200 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700'
       )}
     >
-      {/* Left side: Checkbox + Title + Badges */}
-      <div className="flex items-start gap-3 min-w-0 flex-1">
-        <div className="pt-0.5">
-          <Checkbox
-            checked={isCompleted}
-            onCheckedChange={() => onToggleStatus(task)}
-            id={`task-${task.id}`}
-          />
-        </div>
+      {/* Left side: Checkbox + Title + Badges + Deadline */}
+      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+        <Checkbox
+          checked={isCompleted}
+          onCheckedChange={() => onToggleStatus(task)}
+          id={`task-check-${task.id}`}
+          aria-label={
+            isCompleted
+              ? `Mark "${task.title}" as pending`
+              : `Mark "${task.title}" as completed`
+          }
+        />
 
-        <div className="min-w-0 flex-1 space-y-1">
+        <div className="min-w-0 flex-1 space-y-1 pt-0.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <span
+            <label
+              htmlFor={`task-check-${task.id}`}
               className={cn(
-                'text-sm font-medium leading-tight transition-all',
+                'text-sm font-medium leading-snug cursor-pointer break-words',
                 isCompleted
-                  ? 'line-through text-zinc-400 dark:text-zinc-500'
-                  : 'text-zinc-900 dark:text-zinc-100'
+                  ? 'line-through text-zinc-500 dark:text-zinc-400'
+                  : 'text-zinc-900 dark:text-zinc-100 font-semibold'
               )}
             >
               {task.title}
-            </span>
+            </label>
 
             {/* Type badge */}
-            <Badge variant={task.type} className="text-[10px] py-0 px-2 h-4.5">
+            <Badge variant={task.type} className="text-[10px] py-0 px-2 h-5">
               {getTypeLabel(task.type)}
             </Badge>
 
             {/* Overdue / Today alert badges */}
             {isOverdue && (
-              <Badge variant="overdue" className="text-[10px] py-0 px-2 h-4.5 gap-1">
-                <AlertCircle className="h-2.5 w-2.5" />
+              <Badge variant="overdue" className="text-[10px] py-0 px-2 h-5 gap-1">
+                <AlertCircle className="h-3 w-3" aria-hidden="true" />
                 Overdue
               </Badge>
             )}
             {isToday && (
               <Badge
                 variant="outline"
-                className="text-[10px] py-0 px-2 h-4.5 border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 gap-1"
+                className="text-[10px] py-0 px-2 h-5 border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200 gap-1 font-semibold"
               >
-                <Clock className="h-2.5 w-2.5" />
+                <Clock className="h-3 w-3" aria-hidden="true" />
                 Due Today
               </Badge>
             )}
           </div>
 
           {/* Deadline indicator */}
-          <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-            <Calendar className="h-3 w-3 shrink-0 opacity-70" />
-            <span className={cn(isOverdue && 'text-red-600 dark:text-red-400 font-medium')}>
+          <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+            {task.deadline?.includes('T') ? (
+              <Clock className="h-3 w-3 shrink-0 text-zinc-400" aria-hidden="true" />
+            ) : (
+              <Calendar className="h-3 w-3 shrink-0 text-zinc-400" aria-hidden="true" />
+            )}
+            <span className={cn(isOverdue && 'text-red-700 dark:text-red-400 font-semibold')}>
               {formatDate(task.deadline)}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Right side: Action buttons */}
-      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+      {/* Right side: Actions */}
+      <div className="flex items-center gap-1 shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onEdit(task)}
-          className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
-          title="Edit Task"
+          className="h-9 w-9 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          aria-label={`Edit task "${task.title}"`}
+          title={`Edit task "${task.title}"`}
         >
-          <Edit3 className="h-3.5 w-3.5" />
-          <span className="sr-only">Edit</span>
+          <Edit3 className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onDelete(task)}
-          className="h-8 w-8 text-zinc-500 hover:text-red-600 dark:hover:text-red-400"
-          title="Delete Task"
+          className="h-9 w-9 text-zinc-500 hover:text-red-700 dark:text-zinc-400 dark:hover:text-red-400"
+          aria-label={`Delete task "${task.title}"`}
+          title={`Delete task "${task.title}"`}
         >
-          <Trash2 className="h-3.5 w-3.5" />
-          <span className="sr-only">Delete</span>
+          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
       </div>
-    </div>
+    </article>
   );
 }

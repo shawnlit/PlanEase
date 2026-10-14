@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Plus, CheckCircle } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface HeaderProps {
   onOpenCreate: () => void;
@@ -11,37 +11,35 @@ interface HeaderProps {
 
 export function Header({ onOpenCreate }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 bg-white/80 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/80">
-      <div className="flex h-16 items-center justify-between px-4 sm:px-8 max-w-7xl mx-auto">
-        {/* Brand / Logo */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-900 text-white shadow-xs dark:bg-zinc-100 dark:text-zinc-950">
-            <CheckCircle className="h-4 w-4 stroke-[2.5]" />
-          </div>
-          <div>
-            <h1 className="text-base font-bold tracking-tight text-zinc-950 dark:text-zinc-50 flex items-center gap-1.5">
+    <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-card/95 backdrop-blur-xs dark:border-zinc-800">
+      <div className="flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        {/* Branding & Subtitle */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded bg-zinc-900 text-[11px] font-bold text-white dark:bg-zinc-100 dark:text-zinc-900">
+              P
+            </span>
+            <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
               PlanEase
-              <span className="text-[10px] font-medium tracking-normal text-zinc-500 border border-zinc-200 rounded px-1.5 py-0.2 dark:border-zinc-800 dark:text-zinc-400">
-                v1.0
-              </span>
-            </h1>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-none">
-              Privacy-friendly student task & deadline manager
-            </p>
+            </span>
           </div>
+          <span className="hidden sm:inline-block h-3.5 w-px bg-zinc-300 dark:bg-zinc-700" aria-hidden="true" />
+          <span className="hidden sm:inline-block text-xs text-zinc-500 dark:text-zinc-400">
+            Student Task & Deadline Manager
+          </span>
         </div>
 
         {/* Right actions */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <ThemeToggle />
           <Button
             onClick={onOpenCreate}
             size="sm"
-            className="gap-1.5 shadow-xs"
+            className="gap-1.5 h-8 px-3 text-xs"
+            aria-label="Create new task"
           >
-            <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">New Task</span>
-            <span className="sm:hidden">Add</span>
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>New Task</span>
           </Button>
         </div>
       </div>

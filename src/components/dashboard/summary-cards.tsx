@@ -4,101 +4,88 @@ import * as React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TaskSummary } from '@/lib/validation';
-import { CheckSquare, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SummaryCardsProps {
   summary: TaskSummary | null;
   isLoading: boolean;
-  onFilterClick?: (filterStatus: 'all' | 'pending' | 'completed' | 'overdue') => void;
 }
 
 export function SummaryCards({ summary, isLoading }: SummaryCardsProps) {
   if (isLoading || !summary) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-xl" />
+          <Skeleton key={i} className="h-16 w-full rounded-md" />
         ))}
       </div>
     );
   }
 
-  const cards = [
+  const items = [
     {
       title: 'Total Tasks',
       value: summary.total,
-      icon: CheckSquare,
-      color: 'text-zinc-600 dark:text-zinc-400',
-      bgColor: 'bg-zinc-100 dark:bg-zinc-900',
+      description: 'In your schedule',
     },
     {
       title: 'Pending',
       value: summary.pending,
-      icon: Clock,
-      color: 'text-blue-600 dark:text-blue-400',
-      bgColor: 'bg-blue-50 dark:bg-blue-950/40',
+      description: 'To be completed',
     },
     {
       title: 'Completed',
       value: summary.completed,
-      icon: CheckCircle2,
-      color: 'text-emerald-600 dark:text-emerald-400',
-      bgColor: 'bg-emerald-50 dark:bg-emerald-950/40',
+      description: 'Finished items',
     },
     {
       title: 'Overdue',
       value: summary.overdue,
-      icon: AlertTriangle,
-      color: summary.overdue > 0 ? 'text-red-600 dark:text-red-400' : 'text-zinc-500 dark:text-zinc-400',
-      bgColor: summary.overdue > 0 ? 'bg-red-50 dark:bg-red-950/40' : 'bg-zinc-100 dark:bg-zinc-900',
-      isOverdueAlert: summary.overdue > 0,
+      description: summary.overdue > 0 ? 'Requires attention' : 'None overdue',
+      isOverdue: summary.overdue > 0,
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {cards.map((card) => {
-        const Icon = card.icon;
-        return (
-          <Card
-            key={card.title}
-            className={cn(
-              'border transition-all duration-150',
-              card.isOverdueAlert
-                ? 'border-red-200 bg-red-50/30 dark:border-red-900/40 dark:bg-red-950/20'
-                : 'hover:border-zinc-300 dark:hover:border-zinc-700'
-            )}
-          >
-            <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                  {card.title}
-                </p>
-                <p
-                  className={cn(
-                    'text-2xl sm:text-3xl font-bold tracking-tight mt-1',
-                    card.isOverdueAlert
-                      ? 'text-red-600 dark:text-red-400'
-                      : 'text-zinc-900 dark:text-zinc-100'
-                  )}
-                >
-                  {card.value}
-                </p>
-              </div>
-              <div
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4" role="region" aria-label="Task Summary Statistics">
+      {items.map((item) => (
+        <Card
+          key={item.title}
+          className={cn(
+            'border bg-card transition-colors',
+            item.isOverdue
+              ? 'border-red-300 dark:border-red-800/80 bg-red-50/20 dark:bg-red-950/10'
+              : 'border-zinc-200 dark:border-zinc-800'
+          )}
+        >
+          <CardContent className="p-3 sm:p-3.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                {item.title}
+              </span>
+              {item.isOverdue && (
+                <AlertCircle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />
+              )}
+            </div>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span
                 className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-lg',
-                  card.bgColor,
-                  card.color
+                  'text-xl font-bold tracking-tight',
+                  item.isOverdue
+                    ? 'text-red-700 dark:text-red-400'
+                    : 'text-zinc-900 dark:text-zinc-100'
                 )}
               >
-                <Icon className="h-5 w-5" />
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+                {item.value}
+              </span>
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate hidden sm:inline">
+                {item.description}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

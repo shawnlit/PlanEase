@@ -11,35 +11,92 @@ interface DialogProps {
 }
 
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = React.useRef<HTMLElement | null>(null);
+
   React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onOpenChange(false);
-      }
-    };
     if (open) {
+      previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
       document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          onOpenChange(false);
+          return;
+        }
+
+        // Focus trap inside dialog
+        if (e.key === 'Tab' && dialogRef.current) {
+          const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusableElements.length > 0) {
+            const first = focusableElements[0];
+            const last = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      };
+
       window.addEventListener('keydown', handleKeyDown);
+
+      // Auto-focus first input or dialog container
+      const timer = setTimeout(() => {
+        if (dialogRef.current) {
+          const firstInput = dialogRef.current.querySelector<HTMLElement>(
+            'input:not([type="hidden"]), textarea, select, button[type="submit"]'
+          );
+          if (firstInput) {
+            firstInput.focus();
+          } else {
+            dialogRef.current.focus();
+          }
+        }
+      }, 50);
+
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = 'unset';
+        window.removeEventListener('keydown', handleKeyDown);
+        if (previouslyFocusedRef.current) {
+          previouslyFocusedRef.current.focus();
+        }
+      };
     } else {
       document.body.style.overflow = 'unset';
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-      window.removeEventListener('keydown', handleKeyDown);
-    };
   }, [open, onOpenChange]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
+      role="presentation"
+    >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in-0 duration-200"
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
         onClick={() => onOpenChange(false)}
+        aria-hidden="true"
       />
-      {/* Modal Container */}
-      <div className="relative z-50 w-full max-w-lg overflow-hidden rounded-xl border border-zinc-200 bg-white p-6 shadow-xl transition-all dark:border-zinc-800 dark:bg-zinc-950 sm:my-8 animate-in zoom-in-95 duration-200">
+
+      {/* Modal Dialog Box */}
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="relative z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-zinc-200 bg-white dark:bg-zinc-900 p-5 sm:p-6 text-zinc-900 dark:text-zinc-50 shadow-2xl dark:border-zinc-800"
+      >
         {children}
       </div>
     </div>
@@ -52,7 +109,7 @@ export function DialogHeader({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex flex-col space-y-1.5 text-center sm:text-left mb-5', className)}
+      className={cn('flex flex-col space-y-1 text-left mb-4', className)}
       {...props}
     />
   );
@@ -64,7 +121,7 @@ export function DialogTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h2
-      className={cn('text-lg font-semibold leading-none tracking-tight text-zinc-900 dark:text-zinc-100', className)}
+      className={cn('text-base font-semibold leading-tight tracking-tight text-zinc-900 dark:text-zinc-50', className)}
       {...props}
     />
   );
@@ -76,7 +133,7 @@ export function DialogDescription({
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn('text-sm text-zinc-500 dark:text-zinc-400 mt-1', className)}
+      className={cn('text-xs text-zinc-600 dark:text-zinc-400', className)}
       {...props}
     />
   );
@@ -89,7 +146,7 @@ export function DialogFooter({
   return (
     <div
       className={cn(
-        'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6 gap-2 sm:gap-0',
+        'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-5 gap-2 sm:gap-0 pt-2 border-t border-zinc-100 dark:border-zinc-800',
         className
       )}
       {...props}
@@ -106,10 +163,11 @@ export function DialogClose({
     <button
       type="button"
       onClick={onClick}
-      className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 dark:ring-offset-zinc-950 dark:focus:ring-zinc-300 cursor-pointer"
+      aria-label="Close dialog"
+      className="absolute right-3.5 top-3.5 flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-100 cursor-pointer"
     >
-      <X className="h-4 w-4" />
-      <span className="sr-only">Close</span>
+      <X className="h-4 w-4" aria-hidden="true" />
+      <span className="sr-only">Close dialog</span>
     </button>
   );
 }
