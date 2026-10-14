@@ -8,6 +8,7 @@ import { TaskList } from '@/components/tasks/task-list';
 import { TaskCalendar } from '@/components/calendar/task-calendar';
 import { TaskDialog } from '@/components/tasks/task-dialog';
 import { DeleteDialog } from '@/components/tasks/delete-dialog';
+import { QuickAddAi } from '@/components/ai/quick-add-ai';
 import { useToast } from '@/components/ui/toast';
 import { TaskItem, TaskSummary } from '@/lib/validation';
 
@@ -144,6 +145,9 @@ export default function DashboardPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Prominent Quick Add with AI Area */}
+        <QuickAddAi onTasksSaved={fetchTasks} />
+
         {/* Metric Summary Cards */}
         <SummaryCards summary={summary} isLoading={isLoading} />
 

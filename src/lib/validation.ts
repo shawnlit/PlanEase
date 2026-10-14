@@ -37,7 +37,7 @@ export const createTaskSchema = z.object({
   status: TaskStatusEnum.optional().default('pending'),
 });
 
-export type CreateTaskInput = z.infer<typeof createTaskSchema>;
+export type CreateTaskInput = z.input<typeof createTaskSchema>;
 
 export const updateTaskSchema = z.object({
   title: z
@@ -64,3 +64,79 @@ export const taskFilterSchema = z.object({
 });
 
 export type TaskFilterInput = z.infer<typeof taskFilterSchema>;
+
+// ==========================================
+// Stage 2: AI Task Extraction Schemas
+// ==========================================
+
+export const parseRequestSchema = z.object({
+  text: z
+    .string({ required_error: 'Text input is required' })
+    .trim()
+    .min(1, 'Please enter some text to extract tasks')
+    .max(1500, 'Text exceeds maximum limit of 1,500 characters'),
+});
+
+export type ParseRequestInput = z.infer<typeof parseRequestSchema>;
+
+// Individual task item returned from Groq
+export const llmExtractedTaskSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Task title cannot be empty'),
+  type: TaskTypeEnum,
+  deadline_text: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .transform((val) => (val && val.length > 0 ? val : null)),
+});
+
+export type LlmExtractedTask = z.infer<typeof llmExtractedTaskSchema>;
+
+// Whole structured output expected from Groq
+export const llmExtractionResponseSchema = z.object({
+  tasks: z
+    .array(llmExtractedTaskSchema)
+    .max(8, 'Maximum 8 proposed tasks allowed per extraction'),
+});
+
+export type LlmExtractionResponse = z.infer<typeof llmExtractionResponseSchema>;
+
+// Proposed task in confirmation preview
+export interface ProposedTask {
+  tempId: string;
+  title: string;
+  type: TaskType;
+  deadline_text: string | null;
+  resolvedDate: string | null;
+  isAmbiguous: boolean;
+  isPast: boolean;
+  clarificationReason?: string;
+  warning?: string;
+  selected: boolean;
+}
+
+// Batch task creation schema for confirming extracted tasks
+export const batchCreateTasksSchema = z.object({
+  tasks: z
+    .array(
+      z.object({
+        title: z.string().trim().min(1, 'Task title cannot be empty'),
+        type: TaskTypeEnum,
+        deadline: z
+          .string()
+          .trim()
+          .nullable()
+          .optional()
+          .transform((val) => (val && val.length > 0 ? val : null)),
+        status: TaskStatusEnum.optional().default('pending'),
+      })
+    )
+    .min(1, 'At least one task must be selected to save')
+    .max(8, 'Maximum 8 tasks can be saved in a single batch'),
+});
+
+export type BatchCreateTasksInput = z.infer<typeof batchCreateTasksSchema>;

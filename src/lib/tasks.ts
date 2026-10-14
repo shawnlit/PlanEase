@@ -176,3 +176,35 @@ export function getUpcomingTasks(): TaskItem[] {
   const db = getDb();
   return db.prepare('SELECT * FROM upcoming_items ORDER BY deadline ASC').all() as TaskItem[];
 }
+
+/**
+ * Insert multiple tasks inside a single SQLite transaction.
+ * If any insertion fails, the entire batch is automatically rolled back.
+ */
+export function createTaskBatch(tasks: CreateTaskInput[]): TaskItem[] {
+  const db = getDb();
+  const insertStmt = db.prepare(`
+    INSERT INTO item (title, type, deadline, status)
+    VALUES (?, ?, ?, ?)
+  `);
+
+  const insertedIds: number[] = [];
+
+  const batchTx = db.transaction((items: CreateTaskInput[]) => {
+    for (const item of items) {
+      const info = insertStmt.run(
+        item.title,
+        item.type,
+        item.deadline ?? null,
+        item.status ?? 'pending'
+      );
+      insertedIds.push(Number(info.lastInsertRowid));
+    }
+  });
+
+  batchTx(tasks);
+
+  return insertedIds
+    .map((id) => getTaskById(id))
+    .filter((t): t is TaskItem => t !== null);
+}
