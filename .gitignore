@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# netlify
+/.netlify/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -50,4 +53,3 @@ next-env.d.ts
 *.db-wal
 *.db-shm
 !data/.gitkeep
-
