@@ -4,7 +4,7 @@ import { getKolkataDateString } from './llm/usage-guard';
 
 export interface ResolvedDateResult {
   originalText: string | null;
-  resolvedDate: string | null; // ISO YYYY-MM-DD
+  resolvedDate: string | null; // ISO YYYY-MM-DD or YYYY-MM-DDTHH:MM
   isAmbiguous: boolean;
   isPast: boolean;
   clarificationReason?: string;
@@ -77,6 +77,16 @@ export function resolveDeadlinePhrase(
     day: '2-digit',
   }).format(dateObj); // Produces YYYY-MM-DD
 
+  // Preserve an explicitly spoken time for the preview and saved task.
+  // Chrono's date object can be affected by the server's local timezone, so
+  // use its parsed hour/minute components rather than Date#getHours().
+  let resolvedDate = formattedDate;
+  if (firstResult.start.isCertain('hour')) {
+    const hour = firstResult.start.get('hour');
+    const minute = firstResult.start.get('minute') ?? 0;
+    resolvedDate = `${formattedDate}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  }
+
   // Check if parsed date is in the past
   const isPast = formattedDate < todayKolkata;
   let warning: string | undefined;
@@ -87,7 +97,7 @@ export function resolveDeadlinePhrase(
 
   return {
     originalText: rawPhrase,
-    resolvedDate: formattedDate,
+    resolvedDate,
     isAmbiguous: false,
     isPast,
     warning,

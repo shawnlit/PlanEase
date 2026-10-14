@@ -112,6 +112,13 @@ async function main() {
     const valid = resolveDeadlinePhrase('tomorrow', new Date('2026-10-14T10:00:00+05:30'));
     assert.strictEqual(valid.resolvedDate, '2026-10-15');
     assert.strictEqual(valid.isAmbiguous, false);
+
+    // Explicit time is preserved for the task preview and saved deadline
+    const timed = resolveDeadlinePhrase(
+      '21st October at 12 pm',
+      new Date('2026-10-14T10:00:00+05:30')
+    );
+    assert.strictEqual(timed.resolvedDate, '2026-10-21T12:00');
   });
 
   // Test 4: Inputs longer than maximum (1500 chars) rejected before quota
