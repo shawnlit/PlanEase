@@ -44,7 +44,7 @@ PlanEase is a clean, minimalist, privacy-friendly task and deadline manager tail
   - Model outputs structured JSON with spoken deadline phrases.
 - **Hard Local Safety Limits:**
   - Maximum **10 outbound requests per calendar day** in `Asia/Kolkata` timezone.
-  - Maximum **2 outbound requests per minute**.
+  - Maximum **3 outbound requests per minute**.
   - Maximum **1 active request at a time** (mutex lock).
   - Maximum **1,500 characters** per prompt.
   - Maximum **8 proposed tasks** per extraction.

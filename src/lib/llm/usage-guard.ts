@@ -34,6 +34,7 @@ export interface UsageStatus {
   remainingDaily: number;
   minuteCount: number;
   maxPerMinute: number;
+  minuteSecondsRemaining: number;
   isActive: boolean;
   inCooldown: boolean;
   cooldownSecondsRemaining: number;
@@ -62,12 +63,14 @@ export async function getUsageStatus(userId: string): Promise<UsageStatus> {
 
   const now = Date.now();
   const inCooldown = now < cooldownUntilMs;
+  const minuteSecondsRemaining = 60 - Math.floor((now / 1000) % 60);
   return {
     todayCount: todayCount ?? 0,
     maxDaily: LLM_CONFIG.MAX_DAILY_REQUESTS,
     remainingDaily: Math.max(0, LLM_CONFIG.MAX_DAILY_REQUESTS - (todayCount ?? 0)),
     minuteCount: minuteCount ?? 0,
     maxPerMinute: LLM_CONFIG.MAX_REQUESTS_PER_MINUTE,
+    minuteSecondsRemaining,
     isActive: isAiRequestActive,
     inCooldown,
     cooldownSecondsRemaining: inCooldown ? Math.ceil((cooldownUntilMs - now) / 1000) : 0,

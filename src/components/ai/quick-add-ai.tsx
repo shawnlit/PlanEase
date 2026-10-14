@@ -25,6 +25,9 @@ interface UsageData {
   remainingDaily: number;
   inCooldown: boolean;
   cooldownSecondsRemaining: number;
+  minuteCount: number;
+  maxPerMinute: number;
+  minuteSecondsRemaining: number;
 }
 
 interface QuickAddAiProps {
@@ -38,6 +41,7 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [proposedTasks, setProposedTasks] = React.useState<ProposedTask[]>([]);
   const [usage, setUsage] = React.useState<UsageData | null>(null);
+  const [minuteSecondsRemaining, setMinuteSecondsRemaining] = React.useState(0);
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const { success, error: toastError } = useToast();
@@ -53,6 +57,7 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
       const data = await res.json();
       if (data.success && data.usage) {
         setUsage(data.usage);
+        setMinuteSecondsRemaining(data.usage.minuteSecondsRemaining);
       }
     } catch {
       // Non-critical, ignore
@@ -62,6 +67,22 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
   React.useEffect(() => {
     fetchUsage();
   }, [fetchUsage]);
+
+  React.useEffect(() => {
+    if (!usage || usage.minuteCount < usage.maxPerMinute) return;
+
+    const timer = window.setInterval(() => {
+      setMinuteSecondsRemaining((seconds) => {
+        if (seconds <= 1) {
+          void fetchUsage();
+          return 0;
+        }
+        return seconds - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [fetchUsage, usage]);
 
   const charCount = inputText.length;
   const isTooLong = charCount > MAX_CHARS;
@@ -110,6 +131,7 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
 
       if (data.usage) {
         setUsage(data.usage);
+        setMinuteSecondsRemaining(data.usage.minuteSecondsRemaining);
       }
 
       if (res.status === 401) {
@@ -213,12 +235,23 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
             </div>
 
             {usage && (
-              <span
-                className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-200/60 dark:border-zinc-700/60 w-fit"
-                title="Requests reset at 00:00 Asia/Kolkata"
-              >
-                Daily usage: {usage.todayCount}/{usage.maxDaily} requests
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-200/60 dark:border-zinc-700/60 w-fit"
+                  title="Requests reset at 00:00 Asia/Kolkata"
+                >
+                  Daily usage: {usage.todayCount}/{usage.maxDaily} requests
+                </span>
+                {usage.minuteCount >= usage.maxPerMinute && minuteSecondsRemaining > 0 && (
+                  <span
+                    className="text-[11px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded border border-amber-200/60 dark:border-amber-800/60 w-fit"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    Minute limit reached. Try again in {minuteSecondsRemaining}s
+                  </span>
+                )}
+              </div>
             )}
           </div>
 

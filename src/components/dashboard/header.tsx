@@ -33,7 +33,6 @@ export function Header({ onOpenCreate }: HeaderProps) {
         {/* Right actions */}
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <LogoutButton />
           <Button
             onClick={onOpenCreate}
             size="sm"
@@ -43,6 +42,7 @@ export function Header({ onOpenCreate }: HeaderProps) {
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
             <span>New Task</span>
           </Button>
+          <LogoutButton />
         </div>
       </div>
     </header>
