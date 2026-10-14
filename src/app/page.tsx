@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/dashboard/header';
 import { Sidebar, ActiveTab } from '@/components/dashboard/sidebar';
 import { SummaryCards } from '@/components/dashboard/summary-cards';
@@ -27,10 +28,15 @@ export default function DashboardPage() {
   const [taskToDelete, setTaskToDelete] = React.useState<TaskItem | null>(null);
 
   const { success, error } = useToast();
+  const router = useRouter();
 
   const fetchTasks = React.useCallback(async () => {
     try {
       const res = await fetch('/api/tasks?summary=true');
+      if (res.status === 401) {
+        router.replace('/auth/login');
+        return;
+      }
       if (!res.ok) {
         let msg = `HTTP ${res.status}`;
         try {
@@ -53,11 +59,11 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error(err);
-      error('Connection Error', 'Could not retrieve tasks from SQLite database.');
+      error('Connection Error', 'Could not retrieve tasks from the database.');
     } finally {
       setIsLoading(false);
     }
-  }, [error]);
+  }, [error, router]);
 
   React.useEffect(() => {
     fetchTasks();
@@ -126,7 +132,7 @@ export default function DashboardPage() {
   const handleTaskSaved = (savedTask: TaskItem, isNew: boolean) => {
     fetchTasks();
     if (isNew) {
-      success('Task created', `"${savedTask.title}" saved to SQLite.`);
+      success('Task created', `"${savedTask.title}" saved to your checklist.`);
     } else {
       success('Task updated', `"${savedTask.title}" changes saved.`);
     }

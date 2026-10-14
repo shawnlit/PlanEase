@@ -322,7 +322,7 @@ export function ProposedTasksPreview({
           {isSaving ? (
             <>
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              Saving to SQLite...
+              Saving to your checklist...
             </>
           ) : (
             <>

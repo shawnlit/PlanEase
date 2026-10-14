@@ -1,4 +1,4 @@
-import { getDb } from './db';
+import { createSupabaseAdminClient } from './supabase/admin';
 import {
   TaskItem,
   TaskSummary,
@@ -7,204 +7,176 @@ import {
   TaskFilterInput,
 } from './validation';
 
-/**
- * Retrieve tasks with optional status, type, and search filters.
- * Uses parameterized SQL queries exclusively.
- */
-export function getTasks(filter?: Partial<TaskFilterInput>): TaskItem[] {
-  const db = getDb();
-  const conditions: string[] = ['1=1'];
-  const params: (string | number)[] = [];
+function throwIfError(error: { message: string } | null, operation: string): void {
+  if (error) {
+    throw new Error(`Failed to ${operation}: ${error.message}`);
+  }
+}
+
+export async function getTasks(
+  userId: string,
+  filter?: Partial<TaskFilterInput>
+): Promise<TaskItem[]> {
+  const supabase = createSupabaseAdminClient();
+  let query = supabase
+    .from('tasks')
+    .select('id, title, type, deadline, status, created_at')
+    .eq('user_id', userId)
+    .order('status', { ascending: true })
+    .order('deadline', { ascending: true, nullsFirst: false })
+    .order('id', { ascending: false });
 
   if (filter?.status && filter.status !== 'all') {
-    conditions.push('status = ?');
-    params.push(filter.status);
+    query = query.eq('status', filter.status);
   }
-
   if (filter?.type && filter.type !== 'all') {
-    conditions.push('type = ?');
-    params.push(filter.type);
+    query = query.eq('type', filter.type);
   }
-
   if (filter?.search && filter.search.trim().length > 0) {
-    conditions.push('title LIKE ?');
-    params.push(`%${filter.search.trim()}%`);
+    query = query.ilike('title', `%${filter.search.trim()}%`);
   }
 
-  const query = `
-    SELECT id, title, type, deadline, status, created_at
-    FROM item
-    WHERE ${conditions.join(' AND ')}
-    ORDER BY 
-      CASE WHEN status = 'completed' THEN 1 ELSE 0 END ASC,
-      CASE WHEN deadline IS NULL THEN 1 ELSE 0 END ASC,
-      deadline ASC,
-      id DESC
-  `;
-
-  return db.prepare(query).all(...params) as TaskItem[];
+  const { data, error } = await query;
+  throwIfError(error, 'retrieve tasks');
+  return ((data ?? []) as TaskItem[]).sort((a, b) => {
+    if (a.status !== b.status) return a.status === 'completed' ? 1 : -1;
+    if (a.deadline === null && b.deadline !== null) return 1;
+    if (a.deadline !== null && b.deadline === null) return -1;
+    if (a.deadline !== b.deadline) return (a.deadline ?? '').localeCompare(b.deadline ?? '');
+    return b.id - a.id;
+  });
 }
 
-/**
- * Retrieve a single task by ID.
- */
-export function getTaskById(id: number): TaskItem | null {
-  const db = getDb();
-  const row = db
-    .prepare('SELECT id, title, type, deadline, status, created_at FROM item WHERE id = ?')
-    .get(id);
+export async function getTaskById(userId: string, id: number): Promise<TaskItem | null> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('id, title, type, deadline, status, created_at')
+    .eq('user_id', userId)
+    .eq('id', id)
+    .maybeSingle();
 
-  return (row as TaskItem) || null;
+  throwIfError(error, 'retrieve task');
+  return (data as TaskItem | null) ?? null;
 }
 
-/**
- * Insert a new task into the database.
- */
-export function createTask(data: CreateTaskInput): TaskItem {
-  const db = getDb();
-  const stmt = db.prepare(`
-    INSERT INTO item (title, type, deadline, status)
-    VALUES (?, ?, ?, ?)
-  `);
+export async function createTask(userId: string, data: CreateTaskInput): Promise<TaskItem> {
+  const supabase = createSupabaseAdminClient();
+  const { data: created, error } = await supabase
+    .from('tasks')
+    .insert({
+      user_id: userId,
+      title: data.title,
+      type: data.type,
+      deadline: data.deadline ?? null,
+      status: data.status ?? 'pending',
+    })
+    .select('id, title, type, deadline, status, created_at')
+    .single();
 
-  const info = stmt.run(
-    data.title,
-    data.type,
-    data.deadline ?? null,
-    data.status ?? 'pending'
-  );
-
-  const inserted = getTaskById(Number(info.lastInsertRowid));
-  if (!inserted) {
-    throw new Error('Failed to retrieve newly created task');
-  }
-
-  return inserted;
+  throwIfError(error, 'create task');
+  if (!created) throw new Error('Failed to retrieve newly created task');
+  return created as TaskItem;
 }
 
-/**
- * Update task properties.
- */
-export function updateTask(id: number, data: UpdateTaskInput): TaskItem | null {
-  const db = getDb();
-  const existing = getTaskById(id);
-  if (!existing) {
-    return null;
+export async function updateTask(
+  userId: string,
+  id: number,
+  data: UpdateTaskInput
+): Promise<TaskItem | null> {
+  const updates: Record<string, string | null> = {};
+  if (data.title !== undefined) updates.title = data.title;
+  if (data.type !== undefined) updates.type = data.type;
+  if (data.deadline !== undefined) updates.deadline = data.deadline ?? null;
+  if (data.status !== undefined) updates.status = data.status;
+
+  if (Object.keys(updates).length === 0) {
+    return getTaskById(userId, id);
   }
 
-  const fields: string[] = [];
-  const params: (string | number | null)[] = [];
+  const supabase = createSupabaseAdminClient();
+  const { data: updated, error } = await supabase
+    .from('tasks')
+    .update(updates)
+    .eq('user_id', userId)
+    .eq('id', id)
+    .select('id, title, type, deadline, status, created_at')
+    .maybeSingle();
 
-  if (data.title !== undefined) {
-    fields.push('title = ?');
-    params.push(data.title);
-  }
-
-  if (data.type !== undefined) {
-    fields.push('type = ?');
-    params.push(data.type);
-  }
-
-  if (data.deadline !== undefined) {
-    fields.push('deadline = ?');
-    params.push(data.deadline ?? null);
-  }
-
-  if (data.status !== undefined) {
-    fields.push('status = ?');
-    params.push(data.status);
-  }
-
-  if (fields.length === 0) {
-    return existing;
-  }
-
-  params.push(id);
-  const query = `UPDATE item SET ${fields.join(', ')} WHERE id = ?`;
-  db.prepare(query).run(...params);
-
-  return getTaskById(id);
+  throwIfError(error, 'update task');
+  return (updated as TaskItem | null) ?? null;
 }
 
-/**
- * Delete a task by ID.
- */
-export function deleteTask(id: number): boolean {
-  const db = getDb();
-  const result = db.prepare('DELETE FROM item WHERE id = ?').run(id);
-  return result.changes > 0;
+export async function deleteTask(userId: string, id: number): Promise<boolean> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('user_id', userId)
+    .eq('id', id)
+    .select('id');
+
+  throwIfError(error, 'delete task');
+  return (data?.length ?? 0) > 0;
 }
 
-/**
- * Retrieve task summary statistics.
- * Leverages the overdue_items view for overdue counts.
- */
-export function getTaskSummary(): TaskSummary {
-  const db = getDb();
-
-  const totalRow = db.prepare('SELECT count(*) as count FROM item').get() as { count: number };
-  const pendingRow = db
-    .prepare("SELECT count(*) as count FROM item WHERE status = 'pending'")
-    .get() as { count: number };
-  const completedRow = db
-    .prepare("SELECT count(*) as count FROM item WHERE status = 'completed'")
-    .get() as { count: number };
-  const overdueRow = db
-    .prepare('SELECT count(*) as count FROM overdue_items')
-    .get() as { count: number };
+export async function getTaskSummary(userId: string): Promise<TaskSummary> {
+  const tasks = await getTasks(userId);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   return {
-    total: totalRow.count,
-    pending: pendingRow.count,
-    completed: completedRow.count,
-    overdue: overdueRow.count,
+    total: tasks.length,
+    pending: tasks.filter((task) => task.status === 'pending').length,
+    completed: tasks.filter((task) => task.status === 'completed').length,
+    overdue: tasks.filter((task) => {
+      if (task.status !== 'pending' || !task.deadline) return false;
+      const deadlineDate = new Date(task.deadline.split('T')[0]);
+      return !Number.isNaN(deadlineDate.getTime()) && deadlineDate < today;
+    }).length,
   };
 }
 
-/**
- * Retrieve overdue tasks via the SQL view.
- */
-export function getOverdueTasks(): TaskItem[] {
-  const db = getDb();
-  return db.prepare('SELECT * FROM overdue_items ORDER BY deadline ASC').all() as TaskItem[];
-}
-
-/**
- * Retrieve upcoming tasks via the SQL view.
- */
-export function getUpcomingTasks(): TaskItem[] {
-  const db = getDb();
-  return db.prepare('SELECT * FROM upcoming_items ORDER BY deadline ASC').all() as TaskItem[];
-}
-
-/**
- * Insert multiple tasks inside a single SQLite transaction.
- * If any insertion fails, the entire batch is automatically rolled back.
- */
-export function createTaskBatch(tasks: CreateTaskInput[]): TaskItem[] {
-  const db = getDb();
-  const insertStmt = db.prepare(`
-    INSERT INTO item (title, type, deadline, status)
-    VALUES (?, ?, ?, ?)
-  `);
-
-  const insertedIds: number[] = [];
-
-  const batchTx = db.transaction((items: CreateTaskInput[]) => {
-    for (const item of items) {
-      const info = insertStmt.run(
-        item.title,
-        item.type,
-        item.deadline ?? null,
-        item.status ?? 'pending'
-      );
-      insertedIds.push(Number(info.lastInsertRowid));
-    }
+export async function getOverdueTasks(userId: string): Promise<TaskItem[]> {
+  const tasks = await getTasks(userId, { status: 'pending' });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return tasks.filter((task) => {
+    if (!task.deadline) return false;
+    const deadlineDate = new Date(task.deadline.split('T')[0]);
+    return !Number.isNaN(deadlineDate.getTime()) && deadlineDate < today;
   });
+}
 
-  batchTx(tasks);
+export async function getUpcomingTasks(userId: string): Promise<TaskItem[]> {
+  const tasks = await getTasks(userId, { status: 'pending' });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return tasks.filter((task) => {
+    if (!task.deadline) return false;
+    const deadlineDate = new Date(task.deadline.split('T')[0]);
+    return !Number.isNaN(deadlineDate.getTime()) && deadlineDate >= today;
+  });
+}
 
-  return insertedIds
-    .map((id) => getTaskById(id))
-    .filter((t): t is TaskItem => t !== null);
+export async function createTaskBatch(
+  userId: string,
+  tasks: CreateTaskInput[]
+): Promise<TaskItem[]> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert(
+      tasks.map((task) => ({
+        user_id: userId,
+        title: task.title,
+        type: task.type,
+        deadline: task.deadline ?? null,
+        status: task.status ?? 'pending',
+      }))
+    )
+    .select('id, title, type, deadline, status, created_at');
+
+  throwIfError(error, 'create task batch');
+  return (data ?? []) as TaskItem[];
 }

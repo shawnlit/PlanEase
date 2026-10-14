@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ProposedTasksPreview } from './proposed-tasks-preview';
@@ -40,10 +41,15 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const { success, error: toastError } = useToast();
+  const router = useRouter();
 
   const fetchUsage = React.useCallback(async () => {
     try {
       const res = await fetch('/api/parse');
+      if (res.status === 401) {
+        router.replace('/auth/login');
+        return;
+      }
       const data = await res.json();
       if (data.success && data.usage) {
         setUsage(data.usage);
@@ -51,7 +57,7 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
     } catch {
       // Non-critical, ignore
     }
-  }, []);
+  }, [router]);
 
   React.useEffect(() => {
     fetchUsage();
@@ -104,6 +110,11 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
 
       if (data.usage) {
         setUsage(data.usage);
+      }
+
+      if (res.status === 401) {
+        router.replace('/auth/login');
+        return;
       }
 
       if (!res.ok || !data.success) {

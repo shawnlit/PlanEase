@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTasks, createTask, getTaskSummary } from '@/lib/tasks';
 import { createTaskSchema, taskFilterSchema } from '@/lib/validation';
 import { ZodError } from 'zod';
+import { getAuthenticatedUser } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Authentication required' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all';
     const type = searchParams.get('type') || 'all';
@@ -19,8 +25,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const tasks = getTasks(filterResult.data);
-    const summary = includeSummary ? getTaskSummary() : undefined;
+    const tasks = await getTasks(user.id, filterResult.data);
+    const summary = includeSummary ? await getTaskSummary(user.id) : undefined;
 
     return NextResponse.json({
       success: true,
@@ -38,6 +44,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Authentication required' }, { status: 401 });
+    }
+
     const body = await request.json();
     const parseResult = createTaskSchema.safeParse(body);
 
@@ -52,8 +63,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newTask = createTask(parseResult.data);
-    const summary = getTaskSummary();
+    const newTask = await createTask(user.id, parseResult.data);
+    const summary = await getTaskSummary(user.id);
 
     return NextResponse.json(
       {

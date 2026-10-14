@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTaskById, updateTask, deleteTask, getTaskSummary } from '@/lib/tasks';
 import { updateTaskSchema } from '@/lib/validation';
+import { getAuthenticatedUser } from '@/lib/supabase/server';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -11,6 +12,11 @@ export async function GET(
   context: RouteContext
 ) {
   try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Authentication required' }, { status: 401 });
+    }
+
     const { id: rawId } = await context.params;
     const id = parseInt(rawId, 10);
 
@@ -21,7 +27,7 @@ export async function GET(
       );
     }
 
-    const task = getTaskById(id);
+    const task = await getTaskById(user.id, id);
     if (!task) {
       return NextResponse.json(
         { success: false, message: 'Task not found' },
@@ -44,6 +50,11 @@ export async function PATCH(
   context: RouteContext
 ) {
   try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Authentication required' }, { status: 401 });
+    }
+
     const { id: rawId } = await context.params;
     const id = parseInt(rawId, 10);
 
@@ -68,7 +79,7 @@ export async function PATCH(
       );
     }
 
-    const updatedTask = updateTask(id, parseResult.data);
+    const updatedTask = await updateTask(user.id, id, parseResult.data);
     if (!updatedTask) {
       return NextResponse.json(
         { success: false, message: 'Task not found' },
@@ -76,7 +87,7 @@ export async function PATCH(
       );
     }
 
-    const summary = getTaskSummary();
+    const summary = await getTaskSummary(user.id);
 
     return NextResponse.json({
       success: true,
@@ -97,6 +108,11 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Authentication required' }, { status: 401 });
+    }
+
     const { id: rawId } = await context.params;
     const id = parseInt(rawId, 10);
 
@@ -107,7 +123,7 @@ export async function DELETE(
       );
     }
 
-    const deleted = deleteTask(id);
+    const deleted = await deleteTask(user.id, id);
     if (!deleted) {
       return NextResponse.json(
         { success: false, message: 'Task not found or already deleted' },
@@ -115,7 +131,7 @@ export async function DELETE(
       );
     }
 
-    const summary = getTaskSummary();
+    const summary = await getTaskSummary(user.id);
 
     return NextResponse.json({
       success: true,

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'PlanEase — Minimal Student Task & Deadline Manager',
-  description: 'A clean, privacy-friendly task and deadline manager for students with embedded SQLite and AI extraction.',
+  description: 'A clean, privacy-friendly task and deadline manager for students with secure cloud storage and AI extraction.',
 };
 
 export const viewport: Viewport = {

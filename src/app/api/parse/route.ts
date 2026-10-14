@@ -3,10 +3,15 @@ import { extractTasksWithGroq } from '@/lib/llm/groq';
 import { getUsageStatus } from '@/lib/llm/usage-guard';
 import { resolveDeadlinePhrase } from '@/lib/date-resolver';
 import { parseRequestSchema, ProposedTask } from '@/lib/validation';
+import { getAuthenticatedUser } from '@/lib/supabase/server';
 
 export async function GET() {
   try {
-    const usage = getUsageStatus();
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Authentication required' }, { status: 401 });
+    }
+    const usage = await getUsageStatus(user.id);
     return NextResponse.json({
       success: true,
       usage,
@@ -23,7 +28,14 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  let userId: string | null = null;
   try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'Authentication required' }, { status: 401 });
+    }
+    userId = user.id;
+
     const body = await request.json();
     const parseResult = parseRequestSchema.safeParse(body);
 
@@ -33,14 +45,14 @@ export async function POST(request: NextRequest) {
           success: false,
           message: 'Validation failed',
           errors: parseResult.error.flatten().fieldErrors,
-          usage: getUsageStatus(),
+          usage: await getUsageStatus(user.id),
         },
         { status: 400 }
       );
     }
 
     // Call Groq (hard usage limits & audit logging enforced inside)
-    const extraction = await extractTasksWithGroq(parseResult.data.text);
+    const extraction = await extractTasksWithGroq(user.id, parseResult.data.text);
 
     // Resolve natural language deadlines with chrono-node
     const proposedTasks: ProposedTask[] = extraction.tasks.map((task, idx) => {
@@ -60,7 +72,7 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    const updatedUsage = getUsageStatus();
+    const updatedUsage = await getUsageStatus(user.id);
 
     return NextResponse.json({
       success: true,
@@ -80,7 +92,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         message,
-        usage: getUsageStatus(),
+        usage: userId ? await getUsageStatus(userId) : undefined,
       },
       { status: 422 }
     );

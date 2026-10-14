@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { LogoutButton } from '@/components/auth/logout-button';
 import { Plus } from 'lucide-react';
 
 interface HeaderProps {
@@ -32,6 +33,7 @@ export function Header({ onOpenCreate }: HeaderProps) {
         {/* Right actions */}
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <LogoutButton />
           <Button
             onClick={onOpenCreate}
             size="sm"

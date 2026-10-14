@@ -23,7 +23,7 @@ export interface ExtractionResult {
  * Enforces hard local usage guards, server-only API key security,
  * and zero automatic retries or fallbacks.
  */
-export async function extractTasksWithGroq(userText: string): Promise<ExtractionResult> {
+export async function extractTasksWithGroq(userId: string, userText: string): Promise<ExtractionResult> {
   // 1. Verify provider & configuration
   validateLlmProvider();
   const apiKey = getGroqApiKey();
@@ -34,7 +34,7 @@ export async function extractTasksWithGroq(userText: string): Promise<Extraction
 
   // 3. Atomically reserve request slot against SQLite usage limits
   // If limits are exceeded, this throws immediately before contacting Groq
-  const releaseSlot = reserveAiRequestSlot(userText);
+  const releaseSlot = await reserveAiRequestSlot(userId, userText);
 
   let rawResponseText = '';
   let tokensUsed = 0;
@@ -97,7 +97,7 @@ Do not include any thinking, explanations, or extra properties.`;
     }
 
     // 5. Append success audit log
-    logLlmAudit({
+    await logLlmAudit(userId, {
       userText,
       referenceDate: referenceDateStr,
       model: modelId,
@@ -118,7 +118,7 @@ Do not include any thinking, explanations, or extra properties.`;
     // Check for HTTP 429 Rate Limit from Groq
     if (error.status === 429) {
       setProviderCooldown(LLM_CONFIG.DEFAULT_COOLDOWN_MS);
-      logLlmAudit({
+      await logLlmAudit(userId, {
         userText,
         referenceDate: referenceDateStr,
         model: modelId,
@@ -131,7 +131,7 @@ Do not include any thinking, explanations, or extra properties.`;
     }
 
     // Append error audit log
-    logLlmAudit({
+    await logLlmAudit(userId, {
       userText,
       referenceDate: referenceDateStr,
       model: modelId,
