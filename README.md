@@ -1,192 +1,158 @@
-# PlanEase — Privacy-Friendly Student Task Manager
+# PlanEase
 
-PlanEase is a clean, minimalist, privacy-friendly task and deadline manager tailored for students. Backed by an embedded SQLite database using `better-sqlite3`, raw SQL schemas and views, FullCalendar, and Free-Tier-Only Groq AI task extraction, PlanEase is built as a unified Next.js application with zero ORM overhead.
+PlanEase is a private, student-focused task and deadline manager. It combines a calm checklist and calendar workspace with an optional natural-language AI capture flow, so a student can write something like “DBMS assignment due Thursday” and review the extracted tasks before saving them.
 
----
+The project is intentionally small: one Next.js application, typed API routes, Supabase authentication and persistence, FullCalendar for scheduling, and a server-only Groq integration with strict local usage limits.
 
-## Features
+## What it does
 
-### Stage 1: Core Task Management & Calendar
-- **Responsive Minimalist Dashboard:**
-  - Metric summary cards (Total Tasks, Pending Tasks, Completed Tasks, and Overdue Tasks).
-  - Compact navigation sidebar with quick access to Overview, Checklist, and Calendar views.
-  - PlanEase branding, quick task creation, and dark/light theme switching.
-- **Task Management & Persistent Checklist:**
-  - Create tasks with title, type (`exam`, `assignment`, or `task`), and optional deadline date.
-  - Edit task titles, types, deadlines, and statuses.
-  - Delete tasks with an explicit confirmation dialog.
-  - Checkbox toggle for marking tasks complete or pending with persistent SQLite state.
-  - Real-time search by task title.
-  - Filter tasks by status (`All`, `Pending`, `Completed`) and type (`All`, `Exams`, `Assignments`, `General Tasks`).
-  - Clear empty states when no tasks match or when the database is empty.
-- **Academic Calendar Integration (FullCalendar):**
-  - Interactive month and week calendar views.
-  - Displays tasks on their deadline dates.
-  - Distinct colour indicators for Exams (Rose), Assignments (Indigo), and General Tasks (Slate).
-  - Clicking any calendar event opens the edit dialog for that task.
-  - Clicking any empty date opens the task creation dialog prefilled with that date.
-  - Tasks without deadlines are preserved in the database and shown on the checklist, but omitted from the calendar.
-- **Robust SQLite Architecture:**
-  - Raw SQL schema (`db/schema.sql`) and views (`db/views.sql`).
-  - Views for `overdue_items` and `upcoming_items`.
-  - Safe, idempotent database initialization in `src/lib/db.ts` (never drops tables or erases data on restart).
-  - Parameterized queries to eliminate SQL injection vulnerabilities.
+- Create, edit, complete, filter, search, and delete tasks.
+- Organize tasks as exams, assignments, or general tasks.
+- Add date-only or date-and-time deadlines.
+- View deadlines in month and week calendar modes.
+- Use keyboard-friendly controls and responsive layouts on mobile.
+- Extract up to eight proposed tasks from natural-language input.
+- Review and edit AI proposals before saving them in one batch.
+- Keep task queries scoped to the authenticated Supabase user.
+- Offer light and dark themes with a restrained acid-lime accent.
 
-### Stage 2: Free-Tier-Only AI Task Extraction ("Quick Add with AI")
-- **Prominent Natural-Language Input Card:**
-  - Large multiline text area with character counter (max 1,500 characters).
-  - Example chips (`DBMS assignment due Thursday`, `Maths exam on October 25`, `Revise normalization tomorrow`) populate text without auto-submitting.
-  - Submits on click or `Ctrl+Enter` / `Cmd+Enter`.
-  - Exactly one API request per deliberate user click; never calls the model on typing or rendering.
-- **Strict Free-Tier-Only Groq Configuration:**
-  - Operates exclusively on Groq's Free plan with zero paid provider fallbacks.
-  - Whitelist of verified Free models (defaults to `llama-3.3-70b-versatile`). Fails closed on unverified or billable models.
-  - Model outputs structured JSON with spoken deadline phrases.
-- **Hard Local Safety Limits:**
-  - Maximum **10 outbound requests per calendar day** in `Asia/Kolkata` timezone.
-  - Maximum **3 outbound requests per minute**.
-  - Maximum **1 active request at a time** (mutex lock).
-  - Maximum **1,500 characters** per prompt.
-  - Maximum **8 proposed tasks** per extraction.
-  - Low output token limit (~500 tokens).
-  - Atomic request slot reservation in SQLite `ai_usage` table before provider transmission.
-  - Daily counters persist in SQLite across server restarts.
-  - 60-second cooldown on HTTP 429 rate limits.
-- **Deterministic Date Resolution (`chrono-node`):**
-  - Spoken deadline phrases are resolved in code relative to `Asia/Kolkata` reference dates without timezone shifts.
-  - Incomplete dates without months (e.g., "on the 25th") are flagged as ambiguous rather than guessed.
-  - Past deadlines are clearly flagged with visual warnings.
-- **Editable Confirmation Preview:**
-  - Proposed tasks are rendered directly below the input card.
-  - Each task can be checked/unchecked, edited in-place, cleared, or removed.
-  - Selected tasks are saved in a single atomic SQLite transaction (`POST /api/tasks/batch`).
-  - Cancelling the preview saves zero tasks.
+## Product flow
 
-> **Important Notice on Free-Tier Access & Local Limits:**
-> Local usage safeguards ensure PlanEase stops calling the provider once local allowances are reached. However, Groq free-tier access remains subject to Groq's provider-level terms and rate limits. Local limits cannot control external API key usage outside PlanEase or account billing changes made directly in the Groq console. PlanEase is designed to fail closed and will never attempt a paid fallback.
+1. A user signs up or signs in through Supabase Auth.
+2. The protected dashboard loads only that user's tasks.
+3. Tasks can be entered directly or drafted with Quick Add with AI.
+4. AI output is schema-validated and shown in an editable preview.
+5. Natural-language deadlines are resolved in `Asia/Kolkata` with `chrono-node`.
+6. The user confirms selected proposals.
+7. The browser sends one validated batch request to save the tasks.
 
----
+AI extraction is deliberately confirm-before-save. The model never writes directly to the task table.
 
-## Technology Stack
+## Tech stack
 
-- **Framework:** Next.js (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS (Neutral palette with subtle indigo accent, light & dark themes)
-- **Icons:** Lucide React
-- **Calendar:** FullCalendar (`@fullcalendar/react`, `@fullcalendar/daygrid`, `@fullcalendar/timegrid`, `@fullcalendar/interaction`)
-- **Database:** SQLite via `better-sqlite3`
-- **Schema Management:** Raw SQL (`db/schema.sql`, `db/views.sql`, `db/seed.sql`)
-- **LLM SDK:** `groq-sdk` (Free Tier)
-- **Date Parsing:** `chrono-node`
-- **Validation:** Zod
+| Area | Choice |
+| --- | --- |
+| Application | Next.js 16 App Router |
+| Language | TypeScript |
+| UI | React 19, Tailwind CSS 4 |
+| Authentication | Supabase Auth with `@supabase/ssr` |
+| Active application data | Supabase database accessed through server-side helpers |
+| Local database support | SQLite via `better-sqlite3` |
+| Calendar | FullCalendar |
+| AI provider | Groq Free-tier API |
+| Date parsing | `chrono-node` |
+| Validation | Zod |
+| Icons | Lucide React |
+| Testing | `tsx` test runner and repository test suite |
 
----
+## Getting started
 
-## Prerequisites
+### Requirements
 
-- **Node.js:** v18.17+ or v20+ / v22+
-- **npm:** v9+ or v10+
-- **Groq API Key:** Free API key from [Groq Console](https://console.groq.com)
+- Node.js 18.17+ (or a current Node LTS release)
+- npm 9+
+- A Supabase project
+- A Groq API key if AI extraction is enabled
 
----
+### Install
 
-## Setup & Environment Configuration
+```bash
+npm install
+```
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+### Configure environment
 
-2. **Configure environment variables:**
-   Create a `.env.local` file in the project root:
-   ```dotenv
-   LLM_PROVIDER=groq
-   GROQ_API_KEY=your_groq_api_key_here
-   GROQ_MODEL=llama-3.3-70b-versatile
-   ```
-   *Note: `.env.local` is git-ignored and never committed or exposed to the browser.*
+Create `.env.local` in the repository root. Never commit this file or paste secret values into source files.
 
-3. **(Optional) Seed sample student tasks:**
-   ```bash
-   npm run seed
-   ```
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+SUPABASE_SECRET_KEY=your_server_only_supabase_secret
 
-4. **Run automated test suite:**
-   ```bash
-   npm run test
-   ```
+LLM_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=llama-3.3-70b-versatile
+```
 
-5. **Start development server:**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+The publishable Supabase key may be used by the browser client. `SUPABASE_SECRET_KEY` and `GROQ_API_KEY` are server-only and must never be exposed through `NEXT_PUBLIC_*` variables.
 
-6. **Build for production:**
-   ```bash
-   npm run build
-   npm run start
-   ```
+### Run locally
 
----
+```bash
+npm run dev
+```
 
-## Project Structure
+Open [http://localhost:3000](http://localhost:3000).
+
+### Available commands
+
+```bash
+npm run dev       # Start the development server
+npm run build     # Create a production build
+npm run start     # Serve the production build
+npm run lint      # Run ESLint
+npm test          # Run the repository test suite
+npm run seed      # Run the optional local seed script
+```
+
+## Repository map
 
 ```text
-planease/
+PlanEase/
 ├── db/
-│   ├── schema.sql         # Raw SQL table definitions (item, llm_log, ai_usage)
-│   ├── views.sql          # Raw SQL views (overdue_items, upcoming_items)
-│   └── seed.sql           # Realistic student seed tasks
+│   ├── schema.sql       # Local SQLite schema and AI audit/usage tables
+│   ├── views.sql        # Local SQLite overdue/upcoming views
+│   └── seed.sql         # Optional local seed data
 ├── data/
-│   ├── .gitkeep           # Tracks data folder in Git
-│   └── planease.db        # Persistent SQLite database (git-ignored)
+│   └── planease.db      # Local SQLite runtime data (do not commit secrets)
 ├── scripts/
-│   └── seed.ts            # Idempotent database seeder
+│   └── seed.ts          # Optional seed runner
 ├── tests/
-│   └── stage2.test.ts     # Automated test suite (14 test cases)
+│   └── stage6.test.ts   # Validation, ownership, AI, and configuration checks
+├── proxy.ts             # Session refresh and protected-route enforcement
 ├── src/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── parse/
-│   │   │   │   └── route.ts        # POST: AI task extraction | GET: Usage status
-│   │   │   ├── tasks/
-│   │   │   │   ├── route.ts        # GET: List tasks | POST: Create task
-│   │   │   │   ├── [id]/route.ts   # GET, PATCH, DELETE single task
-│   │   │   │   └── batch/route.ts  # POST: Atomic batch task insertion
-│   │   ├── globals.css    # Tailwind CSS & theme tokens
-│   │   ├── layout.tsx     # Root layout with ToastProvider
-│   │   └── page.tsx       # Main PlanEase Dashboard with QuickAddAi
+│   │   │   ├── parse/route.ts
+│   │   │   └── tasks/
+│   │   │       ├── route.ts
+│   │   │       ├── [id]/route.ts
+│   │   │       └── batch/route.ts
+│   │   ├── auth/
+│   │   │   ├── login/page.tsx
+│   │   │   ├── signup/page.tsx
+│   │   │   └── callback/route.ts
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
 │   ├── components/
-│   │   ├── ai/
-│   │   │   ├── quick-add-ai.tsx          # Natural language card with chips
-│   │   │   └── proposed-tasks-preview.tsx # Editable confirmation preview
-│   │   ├── calendar/
-│   │   │   └── task-calendar.tsx         # FullCalendar integration
-│   │   ├── dashboard/
-│   │   │   ├── header.tsx                # Brand header & action
-│   │   │   ├── sidebar.tsx               # Navigation & SQLite status
-│   │   │   └── summary-cards.tsx         # Metric summary cards
-│   │   ├── tasks/
-│   │   │   ├── delete-dialog.tsx         # Task deletion confirmation
-│   │   │   ├── task-dialog.tsx           # Create / Edit modal
-│   │   │   ├── task-item.tsx             # Checklist row
-│   │   │   └── task-list.tsx             # Filterable task checklist
-│   │   └── ui/
-│   │       ├── badge.tsx, button.tsx, card.tsx, checkbox.tsx, dialog.tsx,
-│   │       ├── input.tsx, skeleton.tsx, theme-toggle.tsx, toast.tsx
+│   │   ├── ai/             # AI input and confirmation preview
+│   │   ├── auth/           # Login, signup, and logout UI
+│   │   ├── calendar/       # FullCalendar integration
+│   │   ├── dashboard/      # Header, navigation, summaries
+│   │   ├── tasks/          # Task list, dialogs, and rows
+│   │   └── ui/             # Shared primitives
 │   └── lib/
-│       ├── date-resolver.ts # chrono-node date parsing with Asia/Kolkata
-│       ├── db.ts            # SQLite connection and safe schema runner
-│       ├── tasks.ts         # Parameterized SQL queries & batch transaction
-│       ├── utils.ts         # Utilities and formatting
-│       ├── validation.ts    # Zod schemas & TypeScript types
-│       └── llm/
-│           ├── config.ts      # Model whitelist and safety limit constants
-│           ├── groq.ts        # Free-tier Groq API integration
-│           └── usage-guard.ts # Atomic request reservation & audit log
-├── next.config.ts         # Next.js config with serverExternalPackages
-├── package.json           # Scripts and dependencies
-├── tsconfig.json          # TypeScript config
-└── README.md              # Project documentation
+│       ├── date-resolver.ts
+│       ├── db.ts
+│       ├── tasks.ts
+│       ├── validation.ts
+│       ├── llm/
+│       └── supabase/
+└── package.json
 ```
+
+For the complete architecture, database, API, security, and design rationale, read [test-about.md](./test-about.md).
+
+## Design principles
+
+- **Private by default:** every protected request identifies the user from the server session.
+- **Validate at boundaries:** request bodies, query filters, task types, statuses, and AI output are validated with Zod.
+- **Confirm before persistence:** AI suggestions are drafts until the user selects and saves them.
+- **Fail closed:** unverified models, missing server configuration, invalid output, and usage-limit violations stop the operation.
+- **Small surface area:** shared UI primitives and server helpers avoid introducing a large UI framework or ORM.
+- **Accessible by default:** visible focus states, semantic labels, responsive controls, reduced-motion support, and explicit loading/error/empty states.
+
+## License and status
+
+PlanEase is a private project currently under active development. Add a license before distributing it publicly.
