@@ -96,7 +96,7 @@ export function TaskList({
           <div
             role="tablist"
             aria-label="Filter tasks by completion status"
-            className="inline-flex rounded-md border border-zinc-200 bg-zinc-100 p-0.5 dark:border-zinc-800 dark:bg-zinc-900"
+            className="inline-flex rounded border border-zinc-200 bg-zinc-100 p-0.5 dark:border-zinc-800 dark:bg-zinc-900"
           >
             {statusOptions.map((opt) => (
               <button
@@ -106,9 +106,9 @@ export function TaskList({
                 onClick={() => setStatusFilter(opt.value)}
                 className={cn(
                   'rounded px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer min-h-[30px]',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-100',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-700 dark:focus-visible:ring-lime-300',
                   statusFilter === opt.value
-                    ? 'bg-white text-zinc-950 shadow-2xs dark:bg-zinc-800 dark:text-zinc-50 font-semibold'
+                    ? 'bg-white text-zinc-950 dark:bg-zinc-800 dark:text-zinc-50 font-semibold'
                     : 'text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100'
                 )}
               >
@@ -122,7 +122,7 @@ export function TaskList({
             <label htmlFor="task-type-filter" className="sr-only">
               Filter tasks by type
             </label>
-            <div className="flex items-center gap-1.5 rounded-md border border-zinc-200 bg-card px-2.5 py-1 text-xs text-zinc-700 shadow-2xs dark:border-zinc-800 dark:text-zinc-300 min-h-[34px]">
+            <div className="flex items-center gap-1.5 rounded border border-zinc-200 bg-card px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-800 dark:text-zinc-300 min-h-[34px]">
               <ListFilter className="h-3.5 w-3.5 text-zinc-400 shrink-0" aria-hidden="true" />
               <select
                 id="task-type-filter"
@@ -149,7 +149,7 @@ export function TaskList({
           <Skeleton className="h-14 w-full rounded-md" />
         </div>
       ) : filteredTasks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 py-10 px-4 text-center dark:border-zinc-800">
+        <div className="flex flex-col items-center justify-center rounded border border-dashed border-zinc-300 py-10 px-4 text-center dark:border-zinc-800">
           <div className="rounded-full bg-zinc-100 p-2.5 dark:bg-zinc-900 mb-2.5 text-zinc-400">
             <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
           </div>

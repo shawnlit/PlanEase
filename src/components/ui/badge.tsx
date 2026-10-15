@@ -20,7 +20,7 @@ const badgeVariants = cva(
         assignment:
           'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200 font-medium',
         task:
-          'border-zinc-300 bg-zinc-100 text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-200 font-medium',
+          'border-lime-700 bg-lime-100 text-lime-950 dark:border-lime-700 dark:bg-lime-950/60 dark:text-lime-200 font-medium',
         overdue:
           'border-red-300 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200 font-semibold',
         completed:

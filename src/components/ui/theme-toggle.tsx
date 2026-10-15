@@ -36,7 +36,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="h-9 w-9 rounded-md text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100"
+      className="h-9 w-9 rounded text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100"
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode (currently ${resolvedTheme} mode)`}
       title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
     >

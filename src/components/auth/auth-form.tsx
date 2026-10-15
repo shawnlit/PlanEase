@@ -62,10 +62,11 @@ export function AuthForm({ mode }: AuthFormProps) {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{isSignup ? 'Create your PlanEase account' : 'Sign in to PlanEase'}</CardTitle>
+    <main className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
+      <Card className="w-full max-w-md border-zinc-300 dark:border-zinc-700">
+        <CardHeader className="border-b border-zinc-200 pb-6 dark:border-zinc-800">
+          <div className="mb-5 font-mono text-[10px] uppercase tracking-[0.2em] text-lime-800 dark:text-lime-300">PlanEase / private workspace</div>
+          <CardTitle className="text-2xl font-semibold leading-snug">{isSignup ? 'Create your PlanEase account' : 'Sign in to PlanEase'}</CardTitle>
           <CardDescription>
             {isSignup
               ? 'Create an account to keep your tasks private.'

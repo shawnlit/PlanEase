@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   CornerDownLeft,
   X,
+  CircleHelp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -42,6 +43,7 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
   const [proposedTasks, setProposedTasks] = React.useState<ProposedTask[]>([]);
   const [usage, setUsage] = React.useState<UsageData | null>(null);
   const [minuteSecondsRemaining, setMinuteSecondsRemaining] = React.useState(0);
+  const [isHelpOpen, setIsHelpOpen] = React.useState(false);
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const { success, error: toastError } = useToast();
@@ -217,21 +219,60 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
 
   return (
     <section aria-labelledby="quick-add-heading" className="space-y-4">
-      <Card className="border border-zinc-200 dark:border-zinc-800 bg-card shadow-2xs">
+      <Card className="border border-zinc-200 dark:border-zinc-800 bg-card">
         <CardContent className="p-4 sm:p-5 space-y-3">
           {/* Section Header with Title & Quota */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
             <div>
-              <h2
-                id="quick-add-heading"
-                className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5"
-              >
-                <Sparkles className="h-4 w-4 text-zinc-600 dark:text-zinc-400" aria-hidden="true" />
-                Quick Add with AI
-              </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Type what you need to do in everyday language.
-              </p>
+              <div className="flex items-center gap-2">
+                <h2
+                  id="quick-add-heading"
+                  className="text-xl font-semibold leading-snug text-zinc-900 dark:text-zinc-50 flex items-center gap-1.5"
+                >
+                  <Sparkles className="h-4 w-4 text-lime-700 dark:text-lime-300" aria-hidden="true" />
+                  Quick Add with AI
+                </h2>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsHelpOpen((open) => !open)}
+                    aria-expanded={isHelpOpen}
+                    aria-controls="quick-add-help"
+                    aria-label="Show quick add help"
+                    className="rounded-full p-1 text-zinc-500 hover:bg-lime-100 hover:text-lime-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-700 dark:text-zinc-400 dark:hover:bg-lime-950 dark:hover:text-lime-300 dark:focus-visible:ring-lime-300"
+                  >
+                    <CircleHelp className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  {isHelpOpen && (
+                    <div
+                      id="quick-add-help"
+                      role="status"
+                      className="absolute left-0 top-9 z-20 w-[min(20rem,calc(100vw-3rem))] rounded border border-zinc-300 bg-white p-4 text-xs text-zinc-700 shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+                    >
+                      <p className="font-semibold text-zinc-950 dark:text-zinc-100">
+                        Type what you need in everyday language.
+                      </p>
+                      <p className="mt-2 text-zinc-600 dark:text-zinc-400">Try one of these:</p>
+                      <ul className="mt-1.5 space-y-1.5">
+                        {exampleChips.map((chip) => (
+                          <li key={chip}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleChipClick(chip);
+                                setIsHelpOpen(false);
+                              }}
+                              className="text-left text-lime-800 underline decoration-lime-300 underline-offset-2 hover:text-lime-950 dark:text-lime-300 dark:hover:text-lime-200"
+                            >
+                              {chip}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {usage && (
@@ -255,22 +296,6 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
             )}
           </div>
 
-          {/* Example prompt chips */}
-          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-            <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Examples:</span>
-            {exampleChips.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => handleChipClick(chip)}
-                aria-label={`Insert example text: ${chip}`}
-                className="rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] text-zinc-700 hover:border-zinc-300 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-
           {/* Multiline Textarea with accessible label */}
           <div className="relative">
             <label htmlFor="quick-add-textarea" className="sr-only">
@@ -287,10 +312,10 @@ export function QuickAddAi({ onTasksSaved }: QuickAddAiProps) {
               onKeyDown={handleKeyDown}
               disabled={isLoading}
               rows={3}
-              placeholder="Tell PlanEase what you need to do. For example: DBMS assignment due Thursday, Maths exam on October 25, and revise normalization tomorrow."
+              placeholder="Tell PlanEase what you need to do."
               aria-describedby="quick-add-char-count quick-add-privacy"
               className={cn(
-                'w-full resize-y min-h-[85px] rounded-md border p-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 bg-white dark:bg-zinc-900/60 text-zinc-900 dark:text-zinc-100',
+                'w-full resize-y min-h-[85px] rounded border p-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-700 dark:focus-visible:ring-lime-300 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100',
                 isTooLong
                   ? 'border-red-500 focus-visible:ring-red-500'
                   : 'border-zinc-300 dark:border-zinc-700'

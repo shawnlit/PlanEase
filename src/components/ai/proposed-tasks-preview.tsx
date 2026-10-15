@@ -100,7 +100,7 @@ export function ProposedTasksPreview({
   }
 
   return (
-    <Card className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xs">
+    <Card className="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
       <CardHeader className="pb-3 border-b border-zinc-100 dark:border-zinc-800">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div>

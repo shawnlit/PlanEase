@@ -84,7 +84,7 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-black/60 transition-opacity"
         onClick={() => onOpenChange(false)}
         aria-hidden="true"
       />
@@ -95,7 +95,7 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
         role="dialog"
         aria-modal="true"
         tabIndex={-1}
-        className="relative z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg border border-zinc-200 bg-white dark:bg-zinc-900 p-5 sm:p-6 text-zinc-900 dark:text-zinc-50 shadow-2xl dark:border-zinc-800"
+        className="relative z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded border border-zinc-200 bg-white dark:bg-zinc-900 p-5 sm:p-6 text-zinc-900 dark:text-zinc-50 dark:border-zinc-800"
       >
         {children}
       </div>
@@ -121,7 +121,7 @@ export function DialogTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h2
-      className={cn('text-base font-semibold leading-tight tracking-tight text-zinc-900 dark:text-zinc-50', className)}
+      className={cn('text-base font-semibold leading-normal text-zinc-900 dark:text-zinc-50', className)}
       {...props}
     />
   );

@@ -43,7 +43,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           }}
           className={cn(
             'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-sm border transition-colors cursor-pointer',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-100 dark:ring-offset-zinc-950',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-700 focus-visible:ring-offset-2 dark:focus-visible:ring-lime-300 dark:ring-offset-zinc-950',
             disabled && 'cursor-not-allowed opacity-50',
             checked
               ? 'bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-100 dark:border-zinc-100 dark:text-zinc-950'

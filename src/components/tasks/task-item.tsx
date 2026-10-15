@@ -40,7 +40,7 @@ export function TaskItemRow({
     <article
       aria-label={`Task: ${task.title}, Type: ${getTypeLabel(task.type)}, Status: ${task.status}`}
       className={cn(
-        'group flex items-center justify-between gap-3 rounded-lg border p-3 sm:p-3.5 transition-colors',
+        'group flex items-center justify-between gap-3 rounded border p-3 sm:p-3.5 transition-colors',
         isCompleted
           ? 'border-zinc-200 bg-zinc-50/60 dark:border-zinc-800 dark:bg-zinc-900/40 text-zinc-600 dark:text-zinc-400'
           : isOverdue

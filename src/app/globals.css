@@ -24,26 +24,26 @@
 
 @layer base {
   :root {
-    --background: #fbfbfb;
-    --foreground: #111827;
+    --background: #f7f7f5;
+    --foreground: #171717;
     --card: #ffffff;
-    --card-foreground: #111827;
+    --card-foreground: #171717;
     --popover: #ffffff;
     --popover-foreground: #111827;
-    --primary: #18181b;
+    --primary: #171717;
     --primary-foreground: #ffffff;
-    --secondary: #f4f4f5;
+    --secondary: #efefec;
     --secondary-foreground: #18181b;
-    --muted: #f4f4f5;
-    --muted-foreground: #52525b;
-    --accent: #4338ca;
+    --muted: #efefec;
+    --muted-foreground: #5f5f63;
+    --accent: #3f6212;
     --accent-foreground: #ffffff;
     --destructive: #b91c1c;
     --destructive-foreground: #ffffff;
-    --border: #e4e4e7;
-    --input: #d4d4d8;
-    --ring: #18181b;
-    --radius: 0.5rem;
+    --border: #dcdcd8;
+    --input: #c9c9c4;
+    --ring: #4d7c0f;
+    --radius: 0.25rem;
   }
 
   .dark {
@@ -59,13 +59,13 @@
     --secondary-foreground: #f4f4f5;
     --muted: #1c1c20;
     --muted-foreground: #a1a1aa;
-    --accent: #6366f1;
-    --accent-foreground: #ffffff;
+    --accent: #bef264;
+    --accent-foreground: #1a2e05;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
     --border: #27272a;
     --input: #3f3f46;
-    --ring: #e4e4e7;
+    --ring: #bef264;
   }
 }
 
@@ -78,10 +78,39 @@ html {
 body {
   background-color: var(--background);
   color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.6;
   font-feature-settings: "rlig" 1, "calt" 1;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Keep headings and UI copy on the same readable type system. */
+h1,
+h2,
+h3,
+h4,
+button,
+input,
+select,
+textarea {
+  letter-spacing: normal;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease,
+    opacity 150ms ease, transform 150ms ease;
+}
+
+button:active:not(:disabled),
+a:active {
+  transform: scale(0.98);
 }
 
 /* Reduced Motion Preference */
@@ -170,11 +199,10 @@ body {
   color: var(--foreground) !important;
   font-weight: 500 !important;
   font-size: 0.8125rem !important;
-  border-radius: 0.375rem !important;
+  border-radius: 0.25rem !important;
   padding: 0.375rem 0.625rem !important;
   min-height: 2.25rem !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
-  transition: background-color 0.15s ease, border-color 0.15s ease !important;
+  box-shadow: none !important;
   text-transform: capitalize !important;
 }
 
@@ -245,9 +273,9 @@ body {
 }
 
 .fc .fc-timegrid-event {
-  border-radius: 0.375rem !important;
+  border-radius: 0.25rem !important;
   padding: 0.25rem 0.375rem !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: none !important;
 }
 
 .fc .fc-timegrid-event .fc-event-time {

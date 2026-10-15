@@ -150,7 +150,7 @@ export default function DashboardPage() {
       <Header onOpenCreate={() => handleOpenCreate()} />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-5">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
         {/* Prominent Quick Add with AI Area */}
         <QuickAddAi onTasksSaved={fetchTasks} />
 
@@ -158,7 +158,7 @@ export default function DashboardPage() {
         <SummaryCards summary={summary} isLoading={isLoading} />
 
         {/* Layout with Navigation & Active View */}
-        <div className="flex flex-col md:flex-row gap-5 items-start">
+        <div className="flex flex-col md:flex-row gap-8 items-start">
           {/* Navigation Sidebar */}
           <Sidebar
             activeTab={activeTab}
@@ -176,7 +176,7 @@ export default function DashboardPage() {
                     <div>
                       <h2
                         id="task-checklist-heading"
-                        className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                        className="text-xl font-semibold leading-snug text-zinc-900 dark:text-zinc-50"
                       >
                         Task Checklist
                       </h2>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
                 <div>
                   <h2
                     id="task-checklist-heading"
-                    className="text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+                    className="text-xl font-semibold leading-snug text-zinc-900 dark:text-zinc-50"
                   >
                     Task Checklist
                   </h2>

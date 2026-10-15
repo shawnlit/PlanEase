@@ -71,7 +71,7 @@ export function SummaryCards({ summary, isLoading }: SummaryCardsProps) {
             <div className="mt-1 flex items-baseline gap-2">
               <span
                 className={cn(
-                  'text-xl font-bold tracking-tight',
+                  'text-xl font-bold leading-normal',
                   item.isOverdue
                     ? 'text-red-700 dark:text-red-400'
                     : 'text-zinc-900 dark:text-zinc-100'
